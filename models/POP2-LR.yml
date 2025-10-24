@@ -1,0 +1,43 @@
+# Low-resolution (1 degree) POP2 model
+
+model:
+  name: POP2-LR
+
+  grid:
+    name: gx1v6
+    file: ./pop_grid40.nc
+  
+    coords:
+      type: curvilinear         # rectilinear or curvilinear
+  
+      longitude:
+        nlon: 320
+        idx: i
+        name_sca: TLONG
+        name_vec: ULONG
+  
+      latitude:
+        nlat: 384
+        idx: j
+        name_sca: TLAT
+        name_vec: ULAT
+  
+      depth:
+        nz: 40
+        idx: k
+        name: z_t
+    
+  mask:
+    file: ./pop_grid40.nc
+
+    landseamask_name:
+    
+    basin:
+      atlantic: Atlantic 
+      pacific:  Pacific 
+      arctic:   Arctic
+
+    region:
+
+    section:
+

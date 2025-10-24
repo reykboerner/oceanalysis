@@ -1,0 +1,2 @@
+class OceanData:
+    pass

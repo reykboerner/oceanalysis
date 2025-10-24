@@ -4,8 +4,8 @@ model:
   name: POP2-LR
 
   grid:
-    name: gx1v6
-    file: ./pop_grid40.nc
+    name: gx1v6-40zlevels
+    file: pop_grid40.nc
   
     coords:
       type: curvilinear         # rectilinear or curvilinear
@@ -27,10 +27,22 @@ model:
         idx: k
         name: z_t
     
+    spacing:
+      dx:
+        sca: "DXT"
+        vec: "DXU"
+      dy:
+        sca: "DYT"
+        vec: "DYU"
+      dz: "dz"
+      dA:
+        sca: "TAREA"
+        vec: "UAREA"
+    
   mask:
-    file: ./pop_grid40.nc
+    file: pop_grid40.nc
 
-    landseamask_name:
+    landseamask: topo_mask3D
     
     basin:
       atlantic: Atlantic 

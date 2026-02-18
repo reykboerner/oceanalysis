@@ -1,0 +1,55 @@
+# ECCOv4 regreidded to a regulat 1 degree grid
+
+model:
+  name: ECCOv4-reg1
+
+  grid:
+    name: regrid_regular_1deg
+    file: pop_grid40.nc
+  
+    coords:
+      type: rectilinear         # rectilinear or curvilinear
+  
+      longitude:
+        nlon: 360
+        idx: i
+        name_sca: TLONG
+        name_vec: ULONG
+  
+      latitude:
+        nlat: 180
+        idx: j
+        name_sca: TLAT
+        name_vec: ULAT
+  
+      depth:
+        nz: 50
+        idx: k
+        name: Z
+    
+    spacing:
+      dx:
+        sca: None
+        vec: None
+      dy:
+        sca: None
+        vec: None
+      dz: "dz"
+      dA:
+        sca: None
+        vec: None
+    
+  mask:
+    file: pop_grid40.nc
+
+    landseamask: topo_mask3D
+    
+    basin:
+      atlantic: Atlantic 
+      pacific:  Pacific 
+      arctic:   Arctic
+
+    region:
+
+    section:
+

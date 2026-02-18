@@ -1,0 +1,18 @@
+# Configuration file for POP2 ocean model output
+# Typically the output is stored in the tavg folder.
+
+data:
+  variables:
+    pot_temp: TEMP
+    salinity: SALT
+    pot_density: PD
+    uvel: UVEL 
+    vvel: VVEL
+
+  unit_conversions:
+    pot_temp: x + 273.15
+    salinity: x*1000
+    pot_density: x*1000
+    uvel: x/100
+    vvel: x/100
+

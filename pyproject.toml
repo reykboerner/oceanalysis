@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+packages = "oceanalysis"
+
+[project]
+name = "oceanalysis"
+version = "0.0.1"
+authors = [
+    { name = "Reyk Boerner", email = "r.borner@uu.nl" }
+]
+dependencies = [
+  "xarray",
+  "gsw_xarray",
+  "numexpr",
+]
+
+[tool.setuptools.packages.find]
+include = ["oceanalysis*"]

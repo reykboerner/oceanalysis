@@ -5,7 +5,7 @@ import xarray as xr
 class OceanModel:
     def __init__(self, model_name: str = "POP2-LR"):
         with open(
-            path.join(path.dirname(__file__), f"../model_config/{model_name}.yml"),
+            path.join(path.dirname(__file__), f"../models/{model_name}.yml"),
             'r') as file:
 
             _model = safe_load(file)['model']
@@ -17,7 +17,7 @@ class Grid:
     def __init__(self, specs : dict, model_name : str):
         
         self.file_path = path.join(path.dirname(__file__),
-            f"../model_config/{model_name}/{specs["file"]}")
+            f"../models/{model_name}/{specs["file"]}")
         self.file = xr.load_dataset(self.file_path)
 
         self.tlat = self.file.tlat
@@ -39,12 +39,7 @@ class Mask:
     def __init__(self, specs: dict, model_name : str):
 
         self.file_path = path.join(path.dirname(__file__),
-            f"../model_config/{model_name}/{specs["file"]}")
+            f"../models/{model_name}/{specs["file"]}")
         self.file = xr.load_dataset(self.file_path)
         
         self.seamask = self.file.seamask
-
-
-    
-    
-        

@@ -1,6 +1,6 @@
-from .overturning import streamfunction_z
+from .projection import reduced_salinity_space
 
 class Compute:
-    streamfunction_z = staticmethod(streamfunction_z)
+    reduced_salinity_space = staticmethod(reduced_salinity_space)
 
 __all__ = ["Compute"]

@@ -16,6 +16,7 @@ compute = OceanDiagnostics(pop)
 # compute AMOC strength
 amoc = compute.amoc_strength(data)
 ```
+See also `test/test.py`.
 
 ## Installation
 1. Clone this Github repo: `git clone https://github.com/reykboerner/oceanalysis.git`

@@ -4,6 +4,9 @@ from .grid import Grid
 
 class OceanModel(ABC):
 
+        # Physical model constants
+        gravity = 9.81          # Gravitational acceleration (m s^-2)
+        
         @property
         @abstractmethod
         def grid(self) -> Grid:

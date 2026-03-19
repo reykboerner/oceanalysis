@@ -1,5 +1,5 @@
 import xarray as xr
-from oceanalysis import OceanModel, POP2LR, OceanDiagnostics
+from oceanalysis import POP2LR, OceanDiagnostics
 
 # instantiate POP model
 pop = POP2LR("../models/POP2-LR/POP2_gx1v6_40_grid.nc")

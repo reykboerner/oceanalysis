@@ -1,12 +1,21 @@
+from os import PathLike
+from typing import Union
+
 import xarray as xr
 
 from .model import OceanModel, Grid
 
+
 class POP2LR(OceanModel):
-    def __init__(self, grid_file : str):
+    def __init__(self, grid_file: Union[str, PathLike]):
         self._grid_data = xr.load_dataset(grid_file)
         self._grid = Grid.from_gridfile(self._grid_data)
-    
+
+    @classmethod
+    def from_file(cls, grid_file: Union[str, PathLike]):
+        """Create a POP2LR instance from a grid NetCDF file."""
+        return cls(grid_file)
+
     @property
     def grid(self) -> Grid:
         return self._grid

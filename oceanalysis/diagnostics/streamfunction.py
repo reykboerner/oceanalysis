@@ -28,25 +28,19 @@ def _mocsigma(pd_arr, vel_arr, dxu_arr, dz_arr,
                 if mask_arr[k, j, i] > 0.0:
                     v_transp = vel_arr[k, j, i] * 1e-2 * dxu_arr[j, i] * 1e-2 * dz_arr[k]
                     if i < itot - 1:
-                        sigma = (
-                            pd_arr[k, j, i]
+                        sigma = (pd_arr[k, j, i]
                             + pd_arr[k, j + 1, i]
                             + pd_arr[k, j, i + 1]
-                            + pd_arr[k, j + 1, i + 1]
-                        ) / 4
+                            + pd_arr[k, j + 1, i + 1])/4
                     else:
-                        sigma = (
-                            pd_arr[k, j, i]
+                        sigma = (pd_arr[k, j, i]
                             + pd_arr[k, j + 1, i]
                             + pd_arr[k, j, 0]
-                            + pd_arr[k, j + 1, 0]
-                        ) / 4
-
+                            + pd_arr[k, j + 1, 0])/4
                     for s, sig in enumerate(sigmas):
                         if sigma > sig:
                             mocsig[s, j] -= v_transp * 1e-6
     return mocsig
-
 
 def moc_streamfunction_sigma(model, data, mask,
     sigmas=np.arange(23, 28.201, 0.1), p_level=0):
@@ -68,13 +62,13 @@ def moc_streamfunction_sigma(model, data, mask,
     dz_arr = dz.values
 
     mask_arr = mask.fillna(0).astype(float).values
+    jtot = vel.sizes["j"]
+    itot = vel.sizes["i"]
+    ktot = vel.sizes["k"]
 
     if has_time:
         ntimes = vel.sizes["time"]
-        jtot = vel.sizes["j"]
-        itot = vel.sizes["i"]
-        ktot = vel.sizes["k"]
-
+        
         results = []
         for t in range(ntimes):
             pd_slice = pd.isel(time=t).values
@@ -97,10 +91,6 @@ def moc_streamfunction_sigma(model, data, mask,
             name="meridional_streamfunction_sigma",
         )
     else:
-        jtot = vel.sizes["j"]
-        itot = vel.sizes["i"]
-        ktot = vel.sizes["k"]
-
         mocsig = _mocsigma(
             pd.values, vel.values, dxu_arr, dz_arr, mask_arr, sigmas, jtot, itot, ktot
         )

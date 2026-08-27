@@ -54,3 +54,6 @@ class Grid:
             return self.ulat.mean(dim='i')
         else:
             return self.ulat.where(mask).mean(dim='i')
+
+    def latweights(self, lat):
+        return xr.DataArray(np.cos(np.pi/180*lat), dims=["j"])

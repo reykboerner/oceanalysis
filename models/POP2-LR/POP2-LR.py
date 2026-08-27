@@ -1,3 +1,6 @@
+import numpy as np
+import xarray as xr
+
 class POP():
     def __init__(self, resolution='gx1v6', gridfile="../../data/pop_grid40.nc"):
         """
@@ -31,7 +34,8 @@ class POP():
             _mask = self.grid.REGION_MASK.isin([1,2,3,6,8,9,10]).astype(int)
         elif label == 'AtlanticSO':
             _mask = (self.grid.REGION_MASK.isin([6,8,9]).astype(int).fillna(0) + 
-                self.grid.REGION_MASK.isin([1]).astype(int)).where((self.grid.TLONG < 20) | (self.grid.TLONG > 293)).fillna(0)
+                self.grid.REGION_MASK.isin([1]).astype(int)).where(
+                (self.grid.TLONG < 20) | (self.grid.TLONG > 293)).fillna(0)
         
         return _mask.where(
             (self.grid.TLAT>=latrange[0]) & (self.grid.TLAT<=latrange[1])
@@ -43,3 +47,14 @@ class POP():
             return land
         else:
             return land * mask2D
+
+    def vector_at_tracer(self, u_variable):
+        """
+        Linear B-grid interpolation. Averages the four U-grid cells around a T-grid cell.
+        Periodic boundary conditions zonally, absorbing boundary condition at northern
+        border.
+        """
+        u = np.pad(u_variable.values, ((0,0), (0,1), (0,0)), constant_values=0.0)
+        u_shift = np.roll(u, 1, axis=2)
+        u_tracer = (u[:, 1:, :] + u[:, :-1, :] + u_shift[:, 1:, :] + u_shift[:, :-1, :])/4
+        return xr.DataArray(u_tracer, dims=["k", "j", "i"])

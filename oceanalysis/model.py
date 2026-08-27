@@ -6,6 +6,9 @@ class OceanModel(ABC):
 
         # Physical model constants
         gravity = 9.81          # Gravitational acceleration (m s^-2)
+        c_p = 3985              # Specific heat capacity
+        S0 = 35.0               # Reference salinity
+
         
         @property
         @abstractmethod
@@ -18,4 +21,12 @@ class OceanModel(ABC):
 
         @abstractmethod
         def mask3D(self, region_name=None):
+            pass
+
+        @abstractmethod
+        def vector_at_tracer(self, u_variable):
+            """
+            Defines the interpolation protocol for evaluating vector quantities
+            (e.g. velocity) at tracer grid points.
+            """
             pass

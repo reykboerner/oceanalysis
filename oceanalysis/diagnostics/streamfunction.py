@@ -26,7 +26,7 @@ def _mocsigma(pd_arr, vel_arr, dxu_arr, dz_arr,
         for k in range(ktot):
             for i in range(itot):
                 if mask_arr[k, j, i] > 0.0:
-                    v_transp = vel_arr[k, j, i] * 1e-2 * dxu_arr[j, i] * 1e-2 * dz_arr[k]
+                    v_transp = vel_arr[k, j, i] * dxu_arr[j, i] * dz_arr[k]
                     if i < itot - 1:
                         sigma = (pd_arr[k, j, i]
                             + pd_arr[k, j + 1, i]
@@ -39,8 +39,8 @@ def _mocsigma(pd_arr, vel_arr, dxu_arr, dz_arr,
                             + pd_arr[k, j + 1, 0])/4
                     for s, sig in enumerate(sigmas):
                         if sigma > sig:
-                            mocsig[s, j] -= v_transp * 1e-6
-    return mocsig
+                            mocsig[s, j] -= v_transp
+    return mocsig * 1e-6 # in Sv
 
 def moc_streamfunction_sigma(model, data, mask,
     sigmas=np.arange(23, 28.201, 0.1), p_level=0):
@@ -53,7 +53,7 @@ def moc_streamfunction_sigma(model, data, mask,
     """
 
     pd = potential_density(data, p_level=p_level)
-    vel = data["VVEL"]
+    vel = data["VVEL"]/100 # TODO: units
     dxu = model.grid.udx
     dz = model.grid.udz
 
@@ -66,42 +66,18 @@ def moc_streamfunction_sigma(model, data, mask,
     itot = vel.sizes["i"]
     ktot = vel.sizes["k"]
 
-    if has_time:
-        ntimes = vel.sizes["time"]
-        
-        results = []
-        for t in range(ntimes):
-            pd_slice = pd.isel(time=t).values
-            vel_slice = vel.isel(time=t).values
-            mocsig = _mocsigma(
-                pd_slice, vel_slice, dxu_arr, dz_arr, mask_arr, sigmas, jtot, itot, ktot
-            )
-            results.append(mocsig)
+    
+    mocsig = _mocsigma(
+        pd.values, vel.values, dxu_arr, dz_arr, mask_arr, sigmas, jtot, itot, ktot
+    )
 
-        stacked = np.stack(results, axis=0)  # Shape: (time, sigma, j)
-        j_coords = pd["j"][:-1] if "j" in pd.coords else np.arange(jtot - 1)
-        result = xr.DataArray(
-            stacked,
-            dims=("time", "sigma", "j"),
-            coords={
-                "time": pd["time"],
-                "sigma": np.asarray(sigmas),
-                "j": j_coords,
-            },
-            name="meridional_streamfunction_sigma",
-        )
-    else:
-        mocsig = _mocsigma(
-            pd.values, vel.values, dxu_arr, dz_arr, mask_arr, sigmas, jtot, itot, ktot
-        )
-
-        j_coords = pd["j"][:-1] if "j" in pd.coords else np.arange(jtot - 1)
-        result = xr.DataArray(
-            mocsig,
-            dims=("sigma", "j"),
-            coords={"sigma": np.asarray(sigmas), "j": j_coords},
-            name="meridional_streamfunction_sigma",
-        )
+    j_coords = pd["j"][:-1] if "j" in pd.coords else np.arange(jtot - 1)
+    result = xr.DataArray(
+        mocsig,
+        dims=("sigma", "j"),
+        coords={"sigma": np.asarray(sigmas), "j": j_coords},
+        name="meridional_streamfunction_sigma",
+    )
 
     result.attrs["long_name"] = "Eulerian meridional overturning streamfunction in density coordinates"
     result.attrs["units"] = "Sv"

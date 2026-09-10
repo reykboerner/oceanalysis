@@ -36,25 +36,50 @@ def freshwater_transport_meridional(model, data, mask, grid_idx):
     v = data.VVEL.where(mask)/100 # TODO: unit conversion
     s = data.SALT.where(mask)*1000 - model.S0 # TODO: unit conversion
 
-    return tracer_transport_section(model, v, s, grid_idx,
+    _ov, _az, _bt, _all = tracer_transport_section(model, v, s, grid_idx,
         section_direction="zonal", prefactor=-1e-6/model.S0) # in Sv
+
+    transport_ov = named_dataarray(_ov,
+        name="F_ov", long_name="Freshwater transport across S->N section (overturning component)",
+        units="Sv", dims=["section"], coords={"section" : [grid_idx]})
+    transport_az = named_dataarray(_az,
+        name="F_az", long_name="Freshwater transport across S->N section (gyre component)",
+        units="Sv", dims=["section"], coords={"section" : [grid_idx]})
+    transport_bt = named_dataarray(_bt,
+        name="F_bt", long_name="Freshwater transport across S->N section (barotropic component)",
+        units="Sv", dims=["section"], coords={"section" : [grid_idx]})
+    transport_all = named_dataarray(_all,
+        name="F_all", long_name="Freshwater transport across S->N section (total)",
+        units="Sv", dims=["section"], coords={"section" : [grid_idx]})
+    
+    return transport_ov, transport_az, transport_bt, transport_all
 
 def freshwater_transport_zonal(model, data, mask, grid_idx):
     v = data.UVEL.where(mask)/100 # TODO: unit conversion
     s = data.SALT.where(mask)*1000 - model.S0 # TODO: unit conversion
 
-    return tracer_transport_section(model, v, s, grid_idx,
+    _ov, _az, _bt, _all = tracer_transport_section(model, v, s, grid_idx,
         section_direction="meridional", prefactor=-1e-6/model.S0) # in Sv
+
+    transport_ov = named_dataarray(_ov,
+        name="F_ov", long_name="Freshwater transport across W->E section (overturning component)",
+        units="Sv", dims=["section"], coords={"section" : [grid_idx]})
+    transport_az = named_dataarray(_az,
+        name="F_az", long_name="Freshwater transport across W->E section (gyre component)",
+        units="Sv", dims=["section"], coords={"section" : [grid_idx]})
+    transport_bt = named_dataarray(_bt,
+        name="F_bt", long_name="Freshwater transport across W->E section (barotropic component)",
+        units="Sv", dims=["section"], coords={"section" : [grid_idx]})
+    transport_all = named_dataarray(_all,
+        name="F_all", long_name="Freshwater transport across W->E section (total)",
+        units="Sv", dims=["section"], coords={"section" : [grid_idx]})
+    
+    return transport_ov, transport_az, transport_bt, transport_all
 
 def heat_transport_section(model, data, mask, grid_idx,
     section_direction = "zonal", T_ref = 0.0):
     """Meridional transport decomposition across a zonal section."""
 
-    N_time = len(data.time)
-    transport_ov = np.zeros(N_time)
-    transport_az = np.zeros(N_time)
-    transport_bt = np.zeros(N_time)
-    transport_all = np.zeros(N_time)
     dz = model.grid.tdz
 
     if section_direction == "zonal":
@@ -68,55 +93,62 @@ def heat_transport_section(model, data, mask, grid_idx,
     else:
         raise(ValueError("section_direction must be either zonal or meridional."))
 
-    for t in range(N_time):
-        if section_direction == "zonal":
-            v = model.vector_at_tracer(vel.isel(time=t)).isel(j=grid_idx)
-            T = data.TEMP.isel(time=t).where(mask).isel(j=grid_idx)
-            S = data.SALT.isel(time=t).where(mask).isel(j=grid_idx)*1000
-            theta = gsw.conversions.CT_from_pt(S, T) - T_ref
-            p = gsw.p_from_z(- model.grid.tz, model.grid.tlat.isel(j=grid_idx))
-            rho = gsw.density.rho(S, theta, p).where(mask.isel(j=grid_idx))
+    if section_direction == "zonal":
+        v = model.vector_at_tracer(vel).isel(j=grid_idx)
+        T = data.TEMP.where(mask).isel(j=grid_idx)
+        S = data.SALT.where(mask).isel(j=grid_idx)*1000
+        theta = gsw.conversions.CT_from_pt(S, T) - T_ref
+        p = gsw.p_from_z(- model.grid.tz, model.grid.tlat.isel(j=grid_idx))
+        rho = gsw.density.rho(S, theta, p).where(mask.isel(j=grid_idx))
 
-            v_dirav = v.weighted(model.grid.tdx.isel(j=grid_idx)).mean(dim='i')
-            theta_dirav = theta.weighted(model.grid.tdx.isel(j=grid_idx)).mean(dim='i')
-            
-        elif section_direction == "meridional":
-            v = model.vector_at_tracer(vel.isel(time=t)).isel(i=grid_idx)
-            T = data.TEMP.isel(time=t).where(mask).isel(i=grid_idx)
-            S = data.SALT.isel(time=t).where(mask).isel(i=grid_idx)*1000
-            theta = gsw.conversions.CT_from_pt(S, T) - T_ref
-            p = gsw.p_from_z(- model.grid.tz, model.grid.tlat.isel(i=grid_idx))
-            rho = gsw.density.rho(S, theta, p).where(mask.isel(i=grid_idx))
-
-            v_dirav = v.weighted(model.grid.tdy.isel(i=grid_idx)).mean(dim='j')
-            theta_dirav = theta.weighted(model.grid.tdy.isel(i=grid_idx)).mean(dim='j')
-
-        v_secav = v_dirav.weighted(dz).mean(dim='k')
-        theta_secav = theta_dirav.weighted(dz).mean(dim='k')
-        v_star = v - v_secav
-        v_prime = v - v_dirav
-        theta_prime = theta - theta_dirav
-
-        transport_ov[t] = model.c_p*(
-            (rho*v_star*dhor).sum(dim=dim)*theta_dirav*dz).sum(dim='k').data
-        transport_az[t] = model.c_p*(
-            (rho*v_prime*theta_prime*dhor).sum(dim=dim)*dz).sum(dim='k').data
-        transport_bt[t] = model.c_p*((rho*v*dhor*dz).sum(dim=['k', dim])*theta_secav).data
-        transport_all[t] = model.c_p*(
-            (v*theta*rho*dhor*dz).sum(dim=['k', dim])
-        )
+        v_dirav = v.weighted(model.grid.tdx.isel(j=grid_idx)).mean(dim='i')
+        theta_dirav = theta.weighted(model.grid.tdx.isel(j=grid_idx)).mean(dim='i')
         
-        return transport_ov, transport_az, transport_bt, transport_all
+    elif section_direction == "meridional":
+        v = model.vector_at_tracer(vel).isel(i=grid_idx)
+        T = data.TEMP.where(mask).isel(i=grid_idx)
+        S = data.SALT.where(mask).isel(i=grid_idx)*1000
+        theta = gsw.conversions.CT_from_pt(S, T) - T_ref
+        p = gsw.p_from_z(- model.grid.tz, model.grid.tlat.isel(i=grid_idx))
+        rho = gsw.density.rho(S, theta, p).where(mask.isel(i=grid_idx))
+
+        v_dirav = v.weighted(model.grid.tdy.isel(i=grid_idx)).mean(dim='j')
+        theta_dirav = theta.weighted(model.grid.tdy.isel(i=grid_idx)).mean(dim='j')
+
+    v_secav = v_dirav.weighted(dz).mean(dim='k')
+    theta_secav = theta_dirav.weighted(dz).mean(dim='k')
+    v_star = v - v_secav
+    v_prime = v - v_dirav
+    theta_prime = theta - theta_dirav
+
+    _ov = model.c_p*(
+        (rho*v_star*dhor).sum(dim=dim)*theta_dirav*dz).sum(dim='k').data
+    _az = model.c_p*(
+        (rho*v_prime*theta_prime*dhor).sum(dim=dim)*dz).sum(dim='k').data
+    _bt = model.c_p*((rho*v*dhor*dz).sum(dim=['k', dim])*theta_secav).data
+    _all = model.c_p*(
+        (v*theta*rho*dhor*dz).sum(dim=['k', dim])
+    )
+
+    transport_ov = named_dataarray([_ov],
+        name="H_ov", long_name="Heat transport across section (overturning component)",
+        units="W", dims=["section"], coords={"section" : [grid_idx]})
+    transport_az = named_dataarray([_az],
+        name="H_az", long_name="Heat transport across section (gyre component)",
+        units="W", dims=["section"], coords={"section" : [grid_idx]})
+    transport_bt = named_dataarray([_bt],
+        name="H_bt", long_name="Heat transport across section (barotropic component)",
+        units="W", dims=["section"], coords={"section" : [grid_idx]})
+    transport_all = named_dataarray([_all],
+        name="H_all", long_name="Heat transport across section (total)",
+        units="W", dims=["section"], coords={"section" : [grid_idx]})
+    
+    return transport_ov, transport_az, transport_bt, transport_all
 
 def tracer_transport_section(model, vel, tracer, grid_idx,
     section_direction = "zonal", prefactor = 1.0):
     """Meridional transport decomposition across a zonal section."""
 
-    N_time = len(vel.time)
-    transport_ov = np.zeros(N_time)
-    transport_az = np.zeros(N_time)
-    transport_bt = np.zeros(N_time)
-    transport_all = np.zeros(N_time)
     dz = model.grid.tdz
 
     if section_direction == "zonal":
@@ -128,32 +160,29 @@ def tracer_transport_section(model, vel, tracer, grid_idx,
     else:
         raise(ValueError("section_direction must be either zonal or meridional."))
 
-    for t in range(N_time):
-        if section_direction == "zonal":
-            v = model.vector_at_tracer(vel.isel(time=t)).isel(j=grid_idx)
-            q = tracer.isel(time=t, j=grid_idx)
-            v_dirav = v.weighted(model.grid.tdx.isel(j=grid_idx)).mean(dim='i')
-            q_dirav = q.weighted(model.grid.tdx.isel(j=grid_idx)).mean(dim='i')
-            
-        elif section_direction == "meridional":
-            v = model.vector_at_tracer(vel.isel(time=t)).isel(i=grid_idx)
-            q = tracer.isel(time=t, i=grid_idx)
-            v_dirav = v.weighted(model.grid.tdy.isel(i=grid_idx)).mean(dim='j')
-            q_dirav = q.weighted(model.grid.tdy.isel(i=grid_idx)).mean(dim='j')
-
-        v_secav = v_dirav.weighted(dz).mean(dim='k')
-        q_secav = q_dirav.weighted(dz).mean(dim='k')
-        v_star = v - v_secav
-        v_prime = v - v_dirav
-        q_prime = q - q_dirav
-
-        transport_ov[t] = prefactor*(
-            (v_star*dhor).sum(dim=dim)*q_dirav*dz).sum(dim='k').data
-        transport_az[t] = prefactor*(
-            (v_prime*q_prime*dhor).sum(dim=dim)*dz).sum(dim='k').data
-        transport_bt[t] = prefactor*((v*dhor*dz).sum(dim=['k', dim])*q_secav).data
-        transport_all[t] = prefactor*(
-            (v*q*dhor*dz).sum(dim=['k', dim])
-        )
+    if section_direction == "zonal":
+        v = model.vector_at_tracer(vel).isel(j=grid_idx)
+        q = tracer.isel(j=grid_idx)
+        v_dirav = v.weighted(model.grid.tdx.isel(j=grid_idx)).mean(dim='i')
+        q_dirav = q.weighted(model.grid.tdx.isel(j=grid_idx)).mean(dim='i')
         
-        return transport_ov, transport_az, transport_bt, transport_all
+    elif section_direction == "meridional":
+        v = model.vector_at_tracer(vel).isel(i=grid_idx)
+        q = tracer.isel(i=grid_idx)
+        v_dirav = v.weighted(model.grid.tdy.isel(i=grid_idx)).mean(dim='j')
+        q_dirav = q.weighted(model.grid.tdy.isel(i=grid_idx)).mean(dim='j')
+
+    v_secav = v_dirav.weighted(dz).mean(dim='k')
+    q_secav = q_dirav.weighted(dz).mean(dim='k')
+    v_star = v - v_secav
+    v_prime = v - v_dirav
+    q_prime = q - q_dirav
+
+    transport_ov = prefactor*(
+        (v_star*dhor).sum(dim=dim)*q_dirav*dz).sum(dim='k').data
+    transport_az = prefactor*(
+        (v_prime*q_prime*dhor).sum(dim=dim)*dz).sum(dim='k').data
+    transport_bt = prefactor*((v*dhor*dz).sum(dim=['k', dim])*q_secav).data
+    transport_all = prefactor*((v*q*dhor*dz).sum(dim=['k', dim]))
+
+    return [transport_ov], [transport_az], [transport_bt], [transport_all]

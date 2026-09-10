@@ -2,6 +2,7 @@ from ..model import OceanModel
 
 from .streamfunction import amoc_strength, moc_streamfunction_depth, moc_streamfunction_sigma
 from .budget import freshw_content, freshwater_transport_meridional, freshwater_transport_zonal, tracer_transport_section, ocean_heat_content, heat_transport_section
+from .density import potential_density
 from .buoyancy import surface_buoyancy_flux
 from .projection import reduced_salinity_space
 from .utils import median_latitude
@@ -26,6 +27,9 @@ class OceanDiagnostics:
 
     def amoc_strength(self, data, latitude=26, depth=1000):
         return amoc_strength(self.model, data, latitude, depth)
+
+    def potential_density(self, data, **kw):
+        return potential_density(data, **kw)
 
     def surface_buoyancy_flux(self, data, mask, **kw):
         return surface_buoyancy_flux(self.model, data, mask, **kw)

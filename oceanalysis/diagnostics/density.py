@@ -1,5 +1,10 @@
 import gsw_xarray as gsw
 
+def conservative_temperature(data):
+    S = data.SALT*1000
+    T = data.TEMP
+    return gsw.conversions.CT_from_pt(S, T)
+
 def potential_density(data, p_level=0):
     if "PD" in data and p_level == 0:
         return (data["PD"] - 1) * 1000

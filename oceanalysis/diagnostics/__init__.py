@@ -3,7 +3,7 @@ from ..model import OceanModel
 from .streamfunction import amoc_strength, moc_streamfunction_depth, moc_streamfunction_sigma
 from .budget import freshw_content, freshwater_transport_meridional, freshwater_transport_zonal, tracer_transport_section, ocean_heat_content, heat_transport_section
 from .density import potential_density
-from .buoyancy import surface_buoyancy_flux
+from .buoyancy import surface_buoyancy_flux, buoyancy_frequency
 from .projection import reduced_salinity_space
 from .utils import median_latitude
 
@@ -34,11 +34,11 @@ class OceanDiagnostics:
     def surface_buoyancy_flux(self, data, mask, **kw):
         return surface_buoyancy_flux(self.model, data, mask, **kw)
 
-    def freshwater_content(self, data, mask):
-        return freshw_content(self.model, data, mask)
+    def freshwater_content(self, data, mask, **kw):
+        return freshw_content(self.model, data, mask, **kw)
 
-    def ocean_heat_content(self, data, mask, T_ref=0.0):
-        return ocean_heat_content(self.model, data, mask, T_ref=0.0)
+    def ocean_heat_content(self, data, mask, T_ref=0.0, **kw):
+        return ocean_heat_content(self.model, data, mask, T_ref=0.0, **kw)
 
     def freshwater_transport_meridional(self, data, mask, j, **kw):
         return freshwater_transport_meridional(self.model, data, mask, j, **kw)
@@ -54,6 +54,9 @@ class OceanDiagnostics:
 
     def reduced_salinity_space(self, data):
         return reduced_salinity_space(self.model, data)
+
+    def buoyancy_frequency(self, data, mask):
+        return buoyancy_frequency(self.model, data, mask)
 
     ### TEMP
 

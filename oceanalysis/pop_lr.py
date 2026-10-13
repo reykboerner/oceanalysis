@@ -35,6 +35,8 @@ class POP2LR(OceanModel):
             _mask = self._grid_data.REGION_MASK.isin([2,3]).astype(int)
         elif region == 'Arctic':
             _mask = self._grid_data.REGION_MASK.isin([10]).astype(int)
+        elif region == '!Atlantic':
+            _mask = self._grid_data.REGION_MASK.isin([1,2,3,10]).astype(int)
 
         return _mask.fillna(0)
     

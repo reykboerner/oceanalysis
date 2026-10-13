@@ -2,34 +2,51 @@ from .utils import named_dataarray
 import numpy as np
 import gsw
 
-def freshw_content(model, data, mask):
+from .density import conservative_temperature
+
+def freshw_content(model, data, mask, return_density_units=False):
     """
     Calculates the freshwater content tendency in the region mask for reference
     salinity 35.
     Returns the freshwater content change in units of Sv.
     """
-    S_anom = data.SALT.where(mask)*1000 - model.S0 # TODO: unit conversion
+    S = data.SALT.where(mask)*1000
+    S_anom = S - model.S0 # TODO: unit conversion
     dV = (model.grid.tdA*model.grid.tdz).where(mask, 0.0) # TODO: unit conversion
-    W = - (S_anom*dV).sum(dim=['i','j','k'])/model.S0 # in m^3
+    if return_density_units:
+        CT = conservative_temperature(data).where(mask)
+        p = gsw.conversions.p_from_z(- model.grid.tz, model.grid.tlat)
+        beta = gsw.density.beta(S, CT, p)
+        W = - model.gravity*(S_anom*beta*dV).sum(dim=['i', 'j', 'k'])
+        units = "kg (density times volume)"
+    else:
+        W = - (S_anom*dV).sum(dim=['i','j','k'])/model.S0 # in m^3
+        units = "m^3"
     return named_dataarray(W,
         name="freshwater_content",
         long_name=f"Freshwater content (ref salinity {model.S0:2.2f} g/kg)",
-        units="m^3",
+        units=units,
     )
 
-def ocean_heat_content(model, data, mask, T_ref=0.0):
+def ocean_heat_content(model, data, mask, T_ref=0.0, return_density_units=False):
     S = data.SALT.where(mask)*1000 # must be g/kg # TODO: unit conversion
     T = data.TEMP.where(mask) # must be degC # TODO: unit conversion
-    theta = gsw.conversions.CT_from_pt(S, T) - T_ref
+    CT = gsw.conversions.CT_from_pt(S, T) 
+    theta = CT - T_ref
     p = gsw.p_from_z(- model.grid.tz, model.grid.tlat)
-    rho = gsw.density.rho(S, theta, p)
-
+    rho = gsw.density.rho(S, CT, p)
     dV = (model.grid.tdA*model.grid.tdz).where(mask, 0.0) # TODO: unit conversion
-    H = model.c_p*(rho*theta*dV).sum(dim=['i', 'j', 'k'])
-    return named_dataarray(H*1e-18,
+    if return_density_units:
+        alpha = gsw.density.alpha(S, CT, p)
+        H = model.gravity*(alpha*theta*dV).sum(dim=['i', 'j', 'k'])
+        units = "kg (density times volume)"
+    else:
+        H = model.c_p*(rho*theta*dV*1e-6).sum(dim=['i', 'j', 'k'])*1e-12
+        units = "EJ (10^18 J)"
+    return named_dataarray(H,
         name="ocean_heat_content",
         long_name=f"Ocean heat content (ref. temperature {T_ref:2.02f} C)",
-        units="EJ (10^18 J)"
+        units= units
     )
 
 def freshwater_transport_meridional(model, data, mask, grid_idx):

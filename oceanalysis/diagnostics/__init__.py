@@ -1,3 +1,5 @@
+import xarray as xr
+
 from ..model import OceanModel
 
 from .streamfunction import amoc_strength, moc_streamfunction_depth, moc_streamfunction_sigma
@@ -68,7 +70,14 @@ class OceanDiagnostics:
         sensible = _data.SENSIBLE
         rest = _data.T_STRONG_REST
         total = _data.SHF
-        return total, swnet, lwnet, latent, sensible, rest
+        return xr.Dataset({
+            "H_surf_tot" : total,
+            "H_surf_sw" : swnet,
+            "H_surf_lw" : lwnet,
+            "H_surf_lat" : latent,
+            "H_surf_sens" : sensible, 
+            "H_surf_rest" : rest
+        })
 
     def surface_freshwater_flux(self, data, mask):
         """
@@ -80,7 +89,13 @@ class OceanDiagnostics:
         rest = data.S_WEAK_REST.where(mask)
         total = data.SFWF.where(mask) 
         melt = total - (P + E + R + rest)
-        return [total, P, E, R, melt]
+        return xr.Dataset({
+            "F_surf_tot" : total,
+            "F_surf_P" : P,
+            "F_surf_E" : E,
+            "F_surf_R : R,
+            "F_surf_M" : melt
+        })
 
     def median_latitude(self):
         return median_latitude(self.model.grid)

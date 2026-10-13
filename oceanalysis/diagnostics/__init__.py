@@ -93,7 +93,7 @@ class OceanDiagnostics:
             "F_surf_tot" : total,
             "F_surf_P" : P,
             "F_surf_E" : E,
-            "F_surf_R : R,
+            "F_surf_R" : R,
             "F_surf_M" : melt
         })
 

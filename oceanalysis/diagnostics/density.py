@@ -5,6 +5,12 @@ def conservative_temperature(data):
     T = data.TEMP
     return gsw.conversions.CT_from_pt(S, T)
 
+def insitu_density(model, data):
+    S = data["SALT"]*1000
+    CT = gsw.CT_from_pt(SA=S, pt=data["TEMP"])
+    p = gsw.conversions.p_from_z(-model.grid.tz, model.grid.tlat)
+    return gsw.density.rho(S, CT, p)
+
 def potential_density(data, p_level=0):
     if "PD" in data and p_level == 0:
         return (data["PD"] - 1) * 1000

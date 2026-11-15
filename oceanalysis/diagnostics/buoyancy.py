@@ -36,7 +36,7 @@ def buoyancy_frequency(model, data, mask):
     """
     S = data.SALT.where(mask)*1000
     CT = conservative_temperature(data).where(mask)
-    p = gsw.conversions.p_from_z(- model.grid.tz, model.grid.tlat)
+    p = gsw.conversions.p_from_z(-model.grid.tz, model.grid.tlat)
     alpha = gsw.density.alpha(S, CT, p).isel(k=slice(1,None))
     beta = gsw.density.beta(S, CT, p).isel(k=slice(1,None))
 

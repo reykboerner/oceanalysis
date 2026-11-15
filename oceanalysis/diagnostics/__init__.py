@@ -4,8 +4,9 @@ from ..model import OceanModel
 
 from .streamfunction import amoc_strength, moc_streamfunction_depth, moc_streamfunction_sigma
 from .budget import freshw_content, freshwater_transport_meridional, freshwater_transport_zonal, tracer_transport_section, ocean_heat_content, heat_transport_section
-from .density import potential_density
+from .density import potential_density, insitu_density
 from .buoyancy import surface_buoyancy_flux, buoyancy_frequency
+from .energy import center_of_mass, kinetic_energy
 from .projection import reduced_salinity_space
 from .utils import median_latitude
 
@@ -32,6 +33,15 @@ class OceanDiagnostics:
 
     def potential_density(self, data, **kw):
         return potential_density(data, **kw)
+
+    def insitu_density(self, data):
+        return insitu_density(self.model, data)
+
+    def center_of_mass(self, data, **kw):
+        return center_of_mass(self.model, data, **kw)
+
+    def kinetic_energy(self, data):
+        return kinetic_energy(self.model, data)
 
     def surface_buoyancy_flux(self, data, mask, **kw):
         return surface_buoyancy_flux(self.model, data, mask, **kw)

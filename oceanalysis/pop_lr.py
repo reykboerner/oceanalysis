@@ -64,7 +64,7 @@ class POP2LR(OceanModel):
         pattern="t.*.{yyyymm}.nc"):
         """Means of diagnostics(ds) over `months` for each year; incomplete years are skipped."""
         from joblib import Parallel, delayed
-        import time
+        import time, cftime
         months = list(months)
 
         def month(f):
@@ -82,6 +82,7 @@ class POP2LR(OceanModel):
                     print(f"Year {year}: missing months {missing} in {tavg_path}; skipping year.", flush=True)
                 mon = par(delayed(month)(f[0]) for f in files)
                 annual.append(xr.concat(mon, "month").mean("month",
-                    keep_attrs=True).assign_coords(time=year))                
-                print(f"Processing year {year} ({time.time()-tt} s)", flush=True)
+                    keep_attrs=True).assign_coords(time=cftime.DatetimeNoLeap(year, 1, 1),
+                        i=self.grid.tlon.i, j=self.grid.tlat.j, k=self.grid.tz.k))                
+                print(f"... Processed year {year} ({time.time()-tt:.2f} s)", flush=True)
         return xr.concat(annual, "time")

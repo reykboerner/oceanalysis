@@ -18,3 +18,13 @@ def median_latitude(grid):
         np.array([grid.tlat[i,:].median() for i in range(len(grid.tlat.j))]),
         dims=["j"]
     )
+
+def unpack_diagnostics(d):
+    """{name: DataArray | dict of DataArrays} -> Dataset ('name_key' for dict entries)."""
+    out = {}
+    for name, res in d.items():
+        if isinstance(res, dict):
+            out.update({f"{name}_{k}": v for k, v in res.items()})
+        else:
+            out[name] = res
+    return xr.Dataset(out)

@@ -16,5 +16,8 @@ dependencies = [
   "numexpr",
 ]
 
+[project.optional-dependencies]
+postprocess = ["joblib"]
+
 [tool.setuptools.packages.find]
 include = ["oceanalysis*"]

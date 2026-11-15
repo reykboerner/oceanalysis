@@ -1,4 +1,4 @@
-from os import PathLike
+import glob, os
 from typing import Union
 import numpy as np
 import xarray as xr
@@ -7,12 +7,12 @@ from .model import OceanModel, Grid
 from .diagnostics.utils import unpack_diagnostics
 
 class POP2LR(OceanModel):
-    def __init__(self, grid_file: Union[str, PathLike]):
+    def __init__(self, grid_file: Union[str, os.PathLike]):
         self._grid_data = xr.load_dataset(grid_file)
         self._grid = Grid.from_gridfile(self._grid_data)
 
     @classmethod
-    def from_file(cls, grid_file: Union[str, PathLike]):
+    def from_file(cls, grid_file: Union[str, os.PathLike]):
         """Create a POP2LR instance from a grid NetCDF file."""
         return cls(grid_file)
 
@@ -63,6 +63,8 @@ class POP2LR(OceanModel):
         ncores=12,
         pattern="t.*.{yyyymm}.nc"):
         """Means of diagnostics(ds) over `months` for each year; incomplete years are skipped."""
+        from joblib import Parallel, delayed
+        import time
         months = list(months)
 
         def month(f):
@@ -72,6 +74,7 @@ class POP2LR(OceanModel):
         annual = []
         with Parallel(n_jobs=ncores) as par:
             for year in years:
+                tt = time.time()
                 files = [glob.glob(os.path.join(tavg_path,
                     pattern.format(yyyymm=f"{year:04d}{m:02d}"))) for m in months]
                 missing = [m for m, f in zip(months, files) if not f]
@@ -79,5 +82,6 @@ class POP2LR(OceanModel):
                     print(f"Year {year}: missing months {missing} in {tavg_path}; skipping year.", flush=True)
                 mon = par(delayed(month)(f[0]) for f in files)
                 annual.append(xr.concat(mon, "month").mean("month",
-                    keep_attrs=True).assign_coords(time=year))
+                    keep_attrs=True).assign_coords(time=year))                
+                print(f"Processing year {year} ({time.time()-tt} s)", flush=True)
         return xr.concat(annual, "time")

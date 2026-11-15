@@ -74,8 +74,8 @@ def moc_streamfunction_sigma(model, data, mask,
     j_coords = pd["j"][:-1] if "j" in pd.coords else np.arange(jtot - 1)
     result = xr.DataArray(
         mocsig,
-        dims=("sigma", "j"),
-        coords={"sigma": np.asarray(sigmas), "j": j_coords},
+        dims=("sigma", "j2"),
+        coords={"sigma": np.asarray(sigmas), "j2": j_coords},
         name="meridional_streamfunction_sigma",
     )
 

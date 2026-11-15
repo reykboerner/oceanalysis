@@ -1,5 +1,8 @@
 import numpy as np
 import xarray as xr
+import warnings
+import glob, os
+from joblib import Parallel, delayed
 
 class POP():
     def __init__(self, resolution='gx1v6', gridfile="../../data/pop_grid40.nc"):
@@ -58,3 +61,38 @@ class POP():
         u_shift = np.roll(u, 1, axis=2)
         u_tracer = (u[:, 1:, :] + u[:, :-1, :] + u_shift[:, 1:, :] + u_shift[:, :-1, :])/4
         return xr.DataArray(u_tracer, dims=["k", "j", "i"])
+
+    def postprocess(self, tavg_path, diagnostics, years,
+        months=range(1, 13),
+        ncores=12,
+        pattern="t.*.{yyyymm}.nc"):
+        """Means of diagnostics(ds) over `months` for each year; incomplete years are skipped."""
+        months = list(months)
+
+        def month(f):
+            with xr.open_dataset(f) as ds:
+                return unpack_diagnostics(diagnostics(ds)).load()
+
+        annual = []
+        with Parallel(n_jobs=ncores) as par:
+            for year in years:
+                files = [glob.glob(os.path.join(tavg_path,
+                    pattern.format(yyyymm=f"{year:04d}{m:02d}"))) for m in months]
+                missing = [m for m, f in zip(months, files) if not f]
+                if missing:
+                    warnings.warn(f"Year {year}: missing months {missing} in {tavg_path}; skipping year.")
+                    continue
+                mon = par(delayed(month)(f[0]) for f in files)
+                annual.append(xr.concat(mon, "month").mean("month",
+                    keep_attrs=True).assign_coords(time=year))
+        return xr.concat(annual, "time")
+
+def unpack_diagnostics(d):
+    """{name: DataArray | dict of DataArrays} -> Dataset ('name_key' for dict entries)."""
+    out = {}
+    for name, res in d.items():
+        if isinstance(res, dict):
+            out.update({f"{name}_{k}": v for k, v in res.items()})
+        else:
+            out[name] = res
+    return xr.Dataset(out)

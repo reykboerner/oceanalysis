@@ -30,3 +30,7 @@ class OceanModel(ABC):
             (e.g. velocity) at tracer grid points.
             """
             pass
+
+        @abstractmethod
+        def postprocess(self):
+            pass

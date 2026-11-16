@@ -34,13 +34,13 @@ def buoyancy_frequency(model, data, mask):
     alpha = gsw.density.alpha(S, CT, p).isel(k=slice(1,None))
     beta = gsw.density.beta(S, CT, p).isel(k=slice(1,None))
 
-    N_T = - alpha*CT.diff("k")/model.grid.tz.diff("k")
-    N_S = beta*S.diff("k")/model.grid.tz.diff("k")
-    N2 = xr.DataArray(gsw.stability.Nsquared(S, CT, p)[0], dims=["k", "j", "i"],
-        coords={"k": model.grid.uz[:-1], "j": model.grid.tlat.j, "i": model.grid.tlon.i})
+    N_T = (- alpha*CT.diff("k")/model.grid.tz.diff("k")).rename({"k" : "k2"})
+    N_S = (beta*S.diff("k")/model.grid.tz.diff("k")).rename({"k": "k2"})
+    N2 = xr.DataArray(gsw.stability.Nsquared(S, CT, p)[0], dims=["k2", "j", "i"])
+    #    coords={"k2": model.grid.uz[:-1], "j": model.grid.tlat.j, "i": model.grid.tlon.i})
 
     return datadict((
         (N2, "Nsquared", "Buoyancy frequency (calculated with gsw)", "rad/s^2"),
-        (model.gravity*(N_T), "Nsquared_T", "Buoyancy frequency (T component)", "rad/s^2"),
-        (model.gravity*(N_S), "Nsquared_S", "Buoyancy frequency (S component)", "rad/s^2"),
+        (model.gravity*N_T, "Nsquared_T", "Buoyancy frequency (T component)", "rad/s^2"),
+        (model.gravity*N_S, "Nsquared_S", "Buoyancy frequency (S component)", "rad/s^2"),
     ))

@@ -19,8 +19,8 @@ def surface_buoyancy_flux(model, data, mask, rho0=1027):
     B_S = model.gravity*beta*S/rho0*Q_S
 
     return datadict((
-        (B_T, "Bflux_T", "Surface buoyancy flux (T component)", "W/kg"),
-        (B_S, "Bflux_S", "Surface buoyancy flux (S component)", "W/kg"),
+        (B_T, "T", "Surface buoyancy flux (T component)", "W/kg"),
+        (B_S, "S", "Surface buoyancy flux (S component)", "W/kg"),
     ))
 
 def buoyancy_frequency(model, data, mask):

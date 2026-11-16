@@ -70,10 +70,10 @@ def freshwater_transport_meridional(model, data, mask, grid_idx):
         units="Sv", dims=["section"], coords={"section" : [grid_idx]})
     
     return {
-            "F_ov": transport_ov,
-            "F_az": transport_az,
-            "F_bt": transport_bt,
-            "F_tot": transport_all
+            "ov": transport_ov,
+            "az": transport_az,
+            "bt": transport_bt,
+            "tot": transport_all
         }
 
 def freshwater_transport_zonal(model, data, mask, grid_idx):
@@ -97,10 +97,10 @@ def freshwater_transport_zonal(model, data, mask, grid_idx):
         units="Sv", dims=["section"], coords={"section" : [grid_idx]})
     
     return {
-        "F_ov": transport_ov,
-        "F_az": transport_az,
-        "F_bt": transport_bt,
-        "F_tot": transport_all
+        "ov": transport_ov,
+        "az": transport_az,
+        "bt": transport_bt,
+        "tot": transport_all
     }
 
 def heat_transport_section(model, data, mask, grid_idx,
@@ -171,10 +171,10 @@ def heat_transport_section(model, data, mask, grid_idx,
         units="W", dims=["section"], coords={"section" : [grid_idx]})
     
     return {
-        "H_ov": transport_ov,
-        "H_az": transport_az,
-        "H_bt": transport_bt,
-        "H_tot": transport_all
+        "ov": transport_ov,
+        "az": transport_az,
+        "bt": transport_bt,
+        "tot": transport_all
     }
 
 def tracer_transport_section(model, vel, tracer, grid_idx,

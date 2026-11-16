@@ -8,7 +8,7 @@ from .density import potential_density, insitu_density
 from .buoyancy import surface_buoyancy_flux, buoyancy_frequency
 from .energy import center_of_mass, kinetic_energy
 from .projection import reduced_salinity_space
-from .utils import median_latitude
+from .utils import *
 
 class OceanDiagnostics:
 

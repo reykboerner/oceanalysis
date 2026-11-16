@@ -45,6 +45,9 @@ class OceanDiagnostics:
 
     def surface_buoyancy_flux(self, data, mask, **kw):
         return surface_buoyancy_flux(self.model, data, mask, **kw)
+    
+    def buoyancy_frequency(self, data, mask):
+            return buoyancy_frequency(self.model, data, mask)
 
     def freshwater_content(self, data, mask, **kw):
         return freshw_content(self.model, data, mask, **kw)
@@ -67,9 +70,6 @@ class OceanDiagnostics:
     def reduced_salinity_space(self, data):
         return reduced_salinity_space(self.model, data)
 
-    def buoyancy_frequency(self, data, mask):
-        return buoyancy_frequency(self.model, data, mask)
-
     ### TEMP
 
     def surface_heat_flux(self, data, mask):
@@ -80,14 +80,14 @@ class OceanDiagnostics:
         sensible = _data.SENSIBLE
         rest = _data.T_STRONG_REST
         total = _data.SHF
-        return xr.Dataset({
+        return {
             "H_surf_tot" : total,
             "H_surf_sw" : swnet,
             "H_surf_lw" : lwnet,
             "H_surf_lat" : latent,
             "H_surf_sens" : sensible, 
             "H_surf_rest" : rest
-        })
+        }
 
     def surface_freshwater_flux(self, data, mask):
         """
@@ -99,13 +99,13 @@ class OceanDiagnostics:
         rest = data.S_WEAK_REST.where(mask)
         total = data.SFWF.where(mask) 
         melt = total - (P + E + R + rest)
-        return xr.Dataset({
+        return {
             "F_surf_tot" : total,
             "F_surf_P" : P,
             "F_surf_E" : E,
             "F_surf_R" : R,
             "F_surf_M" : melt
-        })
+        }
 
     def median_latitude(self):
         return median_latitude(self.model.grid)

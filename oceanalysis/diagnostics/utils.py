@@ -11,6 +11,11 @@ def named_dataarray(array, name="", long_name="", units="", dims=[], coords={}):
     da.attrs['units'] = units
     return da
 
+def datadict(items, **kw):
+    out = {}
+    for data, name, long_name, units in items:
+        out[name] = named_dataarray(data, name=name, long_name=long_name, units=units, **kw)
+    return out
 
 def median_latitude(grid):
     return xr.DataArray(

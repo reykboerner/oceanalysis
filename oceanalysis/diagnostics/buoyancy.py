@@ -1,5 +1,6 @@
 import gsw
 import xarray as xr
+from .utils import named_dataarray, datadict
 from .density import potential_density, conservative_temperature
 
 def surface_buoyancy_flux(model, data, mask, rho0=1027):
@@ -17,17 +18,10 @@ def surface_buoyancy_flux(model, data, mask, rho0=1027):
     B_T = model.gravity*alpha/(rho0*c_p)*Q_T
     B_S = model.gravity*beta*S/rho0*Q_S
 
-    B_T_av = B_T.where(mask).weighted(model.grid.tdA).mean(dim=['i', 'j'])
-    B_S_av = B_S.where(mask).weighted(model.grid.tdA).mean(dim=['i', 'j'])
-
-    return xr.Dataset(
-        {
-            "Bflux_T" : B_T,
-            "Bflux_S" : B_S,
-            "Bflux_T_av" : B_T_av,
-            "Bflux_S_av" : B_S_av,
-        }
-    )
+    return datadict((
+        (B_T, "Bflux_T", "Surface buoyancy flux (T component)", "W/kg"),
+        (B_S, "Bflux_S", "Surface buoyancy flux (S component)", "W/kg"),
+    ))
 
 def buoyancy_frequency(model, data, mask):
     """
@@ -42,11 +36,11 @@ def buoyancy_frequency(model, data, mask):
 
     N_T = - alpha*CT.diff("k")/model.grid.tz.diff("k")
     N_S = beta*S.diff("k")/model.grid.tz.diff("k")
+    N2 = xr.DataArray(gsw.stability.Nsquared(S, CT, p)[0], dims=["k", "j", "i"],
+        coords={"k": model.grid.uz[:-1], "j": model.grid.tlat.j, "i": model.grid.tlon.i})
 
-    return xr.Dataset(
-        {
-            "Nsquared" : model.gravity*(N_T + N_S),
-            "Nsquared_T" : model.gravity*N_T,
-            "Nsquared_S" : model.gravity*N_S,
-        }
-    )
+    return datadict((
+        (N2, "Nsquared", "Buoyancy frequency (calculated with gsw)", "rad/s^2"),
+        (model.gravity*(N_T), "Nsquared_T", "Buoyancy frequency (T component)", "rad/s^2"),
+        (model.gravity*(N_S), "Nsquared_S", "Buoyancy frequency (S component)", "rad/s^2"),
+    ))

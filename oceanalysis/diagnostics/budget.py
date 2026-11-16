@@ -69,7 +69,12 @@ def freshwater_transport_meridional(model, data, mask, grid_idx):
         name="F_all", long_name="Freshwater transport across S->N section (total)",
         units="Sv", dims=["section"], coords={"section" : [grid_idx]})
     
-    return transport_ov, transport_az, transport_bt, transport_all
+    return {
+            "F_ov": transport_ov,
+            "F_az": transport_az,
+            "F_bt": transport_bt,
+            "F_tot": transport_all
+        }
 
 def freshwater_transport_zonal(model, data, mask, grid_idx):
     v = data.UVEL.where(mask)/100 # TODO: unit conversion
@@ -91,7 +96,12 @@ def freshwater_transport_zonal(model, data, mask, grid_idx):
         name="F_all", long_name="Freshwater transport across W->E section (total)",
         units="Sv", dims=["section"], coords={"section" : [grid_idx]})
     
-    return transport_ov, transport_az, transport_bt, transport_all
+    return {
+        "F_ov": transport_ov,
+        "F_az": transport_az,
+        "F_bt": transport_bt,
+        "F_tot": transport_all
+    }
 
 def heat_transport_section(model, data, mask, grid_idx,
     section_direction = "zonal", T_ref = 0.0):
@@ -160,7 +170,12 @@ def heat_transport_section(model, data, mask, grid_idx,
         name="H_all", long_name="Heat transport across section (total)",
         units="W", dims=["section"], coords={"section" : [grid_idx]})
     
-    return transport_ov, transport_az, transport_bt, transport_all
+    return {
+        "H_ov": transport_ov,
+        "H_az": transport_az,
+        "H_bt": transport_bt,
+        "H_tot": transport_all
+    }
 
 def tracer_transport_section(model, vel, tracer, grid_idx,
     section_direction = "zonal", prefactor = 1.0):

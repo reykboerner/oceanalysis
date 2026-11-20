@@ -44,8 +44,10 @@ class POP2LR(OceanModel):
         lsm = self._grid_data.seamask.fillna(0)
         if region is None:
             return lsm
-        else:
+        elif type(region) == str:
             return lsm * self.mask2D(region)
+        else:
+            return lsm * region.fillna(0)
 
     def vector_at_tracer(self, u_variable):
         """
@@ -80,9 +82,13 @@ class POP2LR(OceanModel):
                 missing = [m for m, f in zip(months, files) if not f]
                 if missing:
                     print(f"Year {year}: missing months {missing} in {tavg_path}; skipping year.", flush=True)
+                    continue
                 mon = par(delayed(month)(f[0]) for f in files)
-                annual.append(xr.concat(mon, "month").mean("month",
-                    keep_attrs=True).assign_coords(time=cftime.DatetimeNoLeap(year, 1, 1),
-                        i=self.grid.tlon.i, j=self.grid.tlat.j, k=self.grid.tz.k))                
+                mon = [ds.expand_dims(month=[m]) for ds, m in zip(mon, months)]
+                annual.append(
+                    xr.concat(mon, "month", data_vars="minimal", coords="minimal", compat="override")
+                    .mean("month", keep_attrs=True)
+                    .expand_dims(time=[cftime.DatetimeNoLeap(year, 1, 1)])
+                )              
                 print(f"... Processed year {year} ({time.time()-tt:.2f} s)", flush=True)
-        return xr.concat(annual, "time")
+        return xr.concat(annual, "time", data_vars="minimal", coords="minimal", compat="override")
